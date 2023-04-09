@@ -22,6 +22,7 @@ contract Vault {
     
     uint32 public minimumTimeBetweenRewards = 3600;
     uint32 public lastRewardTimestamp;
+    uint32 public lastClaimTimestamp;
     uint256 public PRECISION = 10e8;
     uint256 public lidoRewardCount;
     uint256 public curveRewardCount;
@@ -29,6 +30,9 @@ contract Vault {
     uint256 public totalDepositInCurveBalance;
     address public treasury;
     uint256 public minimumRewardAmount = 0.001 ether;
+    uint256 public lastLidoRewardAmount;
+    uint256 public lastCurveRewardAmount;
+    mapping (address => uint256) public userLastClaimTimestamp;
     mapping (bytes => uint256) public userDepositBalances;
     mapping (bytes => uint256) public totalRewardReceivedByUser;
     
@@ -79,10 +83,14 @@ contract Vault {
     
     // user claims rewards from the vault
     function claimRewards() external {
+        require(block.timestamp - userLastClaimTimestamp[msg.sender] > minimumTimeBetweenRewards, "Upkeep not needed");
         reBalanceReward();
         (uint256 lidoReward, uint256 curveReward) = getRewardBalance(msg.sender);
         lido.withdraw(lidoReward, treasury);
         curve.withdraw(curveReward, treasury);
+        lastClaimTimestamp = uint32(block.timestamp);
+        lastRewardAmount = lidoReward;
+        lastCurveRewardAmount = curveReward;
         lidoRewardCount -= lidoReward;
         curveRewardCount -= curveReward;
         totalRewardReceivedByUser[abi.encodePacked(msg.sender, curveReward)] += curveReward;
@@ -103,9 +111,15 @@ contract Vault {
             totalDepositInCurveBalance;
             userCurveDepositWeight / 100;
             
+            if (lastCurveRewardAmount == 0 && lastLidoRewardAmount == 0) {
+                lidoReward = (userLidoDepositWeight * lidoRewardCount) / PRECISION;
+                curveReward = (userCurveDepositWeight * curveRewardCount) / PRECISION;
+            }
+            else {
+                lidoReward = (userLidoDepositWeight * (lastLidoRewardAmount - lidoRewardCount)) / PRECISION;
+                curveReward = (userCurveDepositWeight * (lastCurveRewardAmount - curveRewardCount)) / PRECISION;
+            }
         
-            lidoReward = (userLidoDepositWeight * lidoRewardCount) / PRECISION;
-            curveReward = (userCurveDepositWeight * curveRewardCount) / PRECISION;
         }
         if (lidoReward + curveReward < 0) {
             revert RewardTooLow();

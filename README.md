@@ -1,13 +1,15 @@
-# Sample Hardhat Project
+# Auto-Compounding Vault Project
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+In this project, we will build a smart contract that will allow users to deposit and withdraw funds from a vault. 
+The vault will automatically compound the interest generated from the deposited funds and allow users to withdraw 
+their principal and interest at any time.
+<br>
+The funds are invested in Lido and Curve Staking Pools.
+<br>
+For the convenience of testing I have made a custom version of Lido and Curve Staking contracts.
+The rewards generated from the staking pools linearly increase over time.
 
-Try running some of the following tasks:
 
 ```shell
-npx hardhat help
 npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
 ```
