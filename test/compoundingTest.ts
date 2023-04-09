@@ -7,7 +7,7 @@ describe("Testing Vault Params", function (){
 
     let lido:MockLido, curve:MockCurve, vault:Vault, stEth:StETH, user1:any, user2:any, user3:any, treasury:any;
     before("Setting up the test-suite",async() => {
-        [user1, user2, treasury] = await ethers.getSigners();
+        [user1, user2, user3, treasury] = await ethers.getSigners();
 
         const StETH = await ethers.getContractFactory("StETH");
         stEth = (await StETH.deploy('Curve:StETH',"CStETH")) as StETH;
@@ -69,10 +69,25 @@ describe("Testing Vault Params", function (){
     });
 
     it("User 3 entered the pool, the auto compound should get the balances of all the previous users ready", async() => {
+
+        await network.provider.send("evm_increaseTime", [3600 * 5])
+        await network.provider.send("evm_mine")
+        //user 3 enters the pool after 5 hours
+
        await stEth.mint(user3.address,ethers.utils.parseEther("10000"));
-       await stEth.connect(user3).approve(vault.address,ethers.utils.parseEther("2000"));
+       await stEth.connect(user3).approve(vault.address,ethers.utils.parseEther("10000"));
        await vault.connect(user3).deposit(ethers.utils.parseEther("2500"),0);
        await vault.connect(user3).deposit(ethers.utils.parseEther("5000"),1);
+
+        let lidoRewards, curveRewards;
+        [lidoRewards,curveRewards]= await vault.getRewardBalance(user1.address);
+
+        console.log("Lido Rewards of user 1: ",ethers.utils.formatEther(lidoRewards));
+        console.log("Curve Rewards of user 1: ",ethers.utils.formatEther(curveRewards));
+
+        console.log("Total Lido Rewards: ",ethers.utils.formatEther(await vault.lidoRewardCount()));
+        console.log("Total Curve Rewards: ",ethers.utils.formatEther(await vault.curveRewardCount()));
+
     });
 
 

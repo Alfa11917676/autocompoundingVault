@@ -24,7 +24,12 @@ contract MockCurve {
 		uint256 totalDeposit = userDepositTimestamp[_user].length;
 		for (uint256 i =0; i < totalDeposit; i++) {
 			uint256 depositTime =  userDepositTimestamp[_user][i];
-			uint256 totalTimeSpent = block.timestamp - depositTime - lastClaimPerTimestamp[depositTime];
+			uint256 totalTimeSpent;
+			if (lastClaimPerTimestamp[depositTime] == 0) {
+				totalTimeSpent = block.timestamp - depositTime;
+			} else {
+				totalTimeSpent = block.timestamp -  lastClaimPerTimestamp[depositTime];
+			}
 			totalTimeSpent /= minimumTime;
 			finalBalance +=  (totalTimeSpent * rewardPerMinimumTime);
 		}
