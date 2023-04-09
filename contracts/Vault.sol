@@ -89,7 +89,7 @@ contract Vault {
         lido.withdraw(lidoReward, treasury);
         curve.withdraw(curveReward, treasury);
         lastClaimTimestamp = uint32(block.timestamp);
-        lastRewardAmount = lidoReward;
+        lastLidoRewardAmount = lidoReward;
         lastCurveRewardAmount = curveReward;
         lidoRewardCount -= lidoReward;
         curveRewardCount -= curveReward;
